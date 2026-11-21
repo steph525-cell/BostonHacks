@@ -8,7 +8,7 @@ import pandas as pd
 
 MOODS = ["Chill", "Adventurous", "Starving", "Dateish", "Productive"]
 ACTIVITIES = ["Food", "Cafe", "Dessert", "Outdoor", "Museum", "Shopping", "Nightlife"]
-CUISINES = ["Asian", "American", "Italian", "Mexican", "Middle Eastern", ""Healthy/Vegetarian", "Other"]
+CUISINES = ["Asian", "American", "Italian", "Mexican", "Middle Eastern", "Healthy/Vegetarian", "Other"]
 DIETARY = ["Vegetarian", "Halal"]
 IO_CHOICES = ["Either", "Indoor", "Outdoor"]
 NOISE_CHOICES = ["Either", "Quiet", "Lively"]
