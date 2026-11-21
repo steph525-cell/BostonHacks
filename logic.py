@@ -70,17 +70,53 @@ def prepare_places(places: pd.DataFrame, stations: pd.DataFrame) -> pd.DataFrame
     return df
 
 
+def today_hours(row, now=None):
+    """Return (open_str, close_str) for today in Boston time. (None, None) if closed today."""
+    now = now or datetime.now(ZoneInfo("America/New_York"))
+    day = now.strftime("%A")
+    if day in row and f"{day} open" in row and f"{day} close" in row:
+        if str(row[day]).strip().upper() != "Y":
+            return None, None
+        o = row[f"{day} open"]
+        c = row[f"{day} close"]
+        if pd.isna(o) or pd.isna(c):
+            return None, None
+        return str(o).strip(), str(c).strip()
+    o, c = row.get("open"), row.get("close")
+    if o is None or c is None or pd.isna(o) or pd.isna(c):
+        return None, None
+    return str(o).strip(), str(c).strip()
+
+
 def is_open(open_t, close_t, now=None):
-    """True if open now (Boston time). Handles closing after midnight."""
+    """True if open now (Boston time). Handles closing after midnight and HH:MM:SS."""
     try:
+        if open_t is None or close_t is None or pd.isna(open_t) or pd.isna(close_t):
+            return False
         now = now or datetime.now(ZoneInfo("America/New_York"))
         t = now.hour * 60 + now.minute
-        oh, om = map(int, str(open_t).split(":"))
-        ch, cm = map(int, str(close_t).split(":"))
+        oh, om = map(int, str(open_t).split(":")[:2])
+        ch, cm = map(int, str(close_t).split(":")[:2])
         o, c = oh * 60 + om, ch * 60 + cm
+        if o == 0 and c >= 24 * 60:
+            return True
         return o <= t < c if o < c else (t >= o or t < c)
     except Exception:
         return True  # unknown hours: don't hide the place
+
+
+def is_place_open(row, now=None):
+    """True if a place row is open right now (supports both day columns and open/close)."""
+    now = now or datetime.now(ZoneInfo("America/New_York"))
+    day = now.strftime("%A")
+    if day in row and f"{day} open" in row and f"{day} close" in row:
+        if str(row[day]).strip().upper() != "Y":
+            return False
+        o, c = row[f"{day} open"], row[f"{day} close"]
+        if pd.isna(o) or pd.isna(c):
+            return True
+        return is_open(o, c, now=now)
+    return is_open(row.get("open"), row.get("close"), now=now)
 
 
 def _txt(v, default="n/a"):
@@ -150,7 +186,7 @@ def recommend(people: list, places: pd.DataFrame, stations: pd.DataFrame,
     if any("Halal" in p["dietary"] for p in people):
         df = df[df["halal"].astype(str).str.upper() == "Y"]
     if open_now:
-        df = df[df.apply(lambda r: is_open(r.open, r.close), axis=1)]
+        df = df[df.apply(is_place_open, axis=1)]
     if df.empty:
         return df, None, ("No place fits everyone 😅 Try raising the lowest budget "
                           f"(${min_budget}) or turning off 'Open now'.")

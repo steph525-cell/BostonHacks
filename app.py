@@ -170,43 +170,6 @@ div[data-testid="stButtonGroup"] button[aria-checked="true"] * { color:#111 !imp
  .mmh-t th,.mmh-t td { padding:5px 4px !important; font-size:.72rem; }
 }
 
-
-/* ---- force readable dark text even when the phone is in dark mode ---- */
-.stApp { color-scheme: light; color:#111111; }
-.stApp [data-testid="stMarkdownContainer"], .stApp [data-testid="stMarkdownContainer"] p,
-.stApp [data-testid="stMarkdownContainer"] li, .stApp h1, .stApp h2, .stApp h3, .stApp h4,
-.stApp [data-testid="stWidgetLabel"], .stApp [data-testid="stWidgetLabel"] p,
-.stApp label, .stApp summary, .stApp summary p, .stApp [data-testid="stExpander"] p { color:#111111 !important; }
-.stApp [data-testid="stCaptionContainer"], .stApp [data-testid="stCaptionContainer"] p { color:#333333 !important; }
-.mmh-tag, .mmh-brand, .mmh-stepper .s, .mmh-hl, .mmh-sticker, .mmh-head .t { color:#111111 !important; }
-.mmh-head .sub { color:#222222 !important; }
-.stApp input, .stApp textarea, .stApp [data-baseweb="select"] > div, .stApp [data-baseweb="input"],
-.stApp [data-testid="stNumberInput"] div, .stApp [data-testid="stNumberInput"] button {
-  background:#FFFFFF !important; color:#111111 !important; }
-.stApp [data-testid="stExpander"] details, .stApp [data-testid="stExpander"] summary { background:#FFFFFF !important; }
-.stButton > button, [data-testid="stPopover"] button { background:#FFFFFF !important; color:#111111 !important; }
-.stButton > button p, [data-testid="stPopover"] button p { color:#111111 !important; }
-div[data-testid="stButtonGroup"] button { background:#FFFFFF !important; }
-div[data-testid="stButtonGroup"] button p { color:#111111 !important; }
-.mmh-banner .c, .mmh-banner > div > div:not(.roast):not(.mmh-sticker) { color:#FFFFFF !important; }
-[data-testid="stToolbar"], [data-testid="stDecoration"] { display:none !important; }
-div[data-testid="stButtonGroup"], div[data-testid="stButtonGroup"] > div, div[data-testid="stButtonGroup"] div[role="radiogroup"] { flex-wrap:wrap !important; overflow:visible !important; row-gap:6px; }
-/* friend icon: colored circle with initial (no skin tones) */
-.mmh-av { display:inline-flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:50%;
-  border:3px solid #111; color:#fff !important; font-family:'Fredoka',sans-serif; font-weight:700; font-size:1.1rem;
-  vertical-align:middle; flex-shrink:0; }
-.mmh-av.sm { width:26px; height:26px; font-size:.8rem; border-width:2px; margin-right:4px; }
-.mmh-mystery { background:#111; color:#F7E000 !important; border:4px solid #111; border-radius:22px; box-shadow:6px 6px 0 #F7E000;
-  padding:22px; text-align:center; margin:6px 0 16px 0; }
-.mmh-mystery .q { font-family:'Fredoka',sans-serif; font-size:3.4rem; font-weight:700; letter-spacing:6px; color:#F7E000 !important; }
-.stApp [data-testid="stMarkdownContainer"] .mmh-mystery p, .mmh-mystery p { color:#FFFFFF !important; margin:4px 0 0 0; }
-.mmh-mystery .ppl { margin-top:12px; }
-.mmh-mystery .ppl .mmh-av { margin:0 4px; }
-.mmh-toppick .mmh-bubble { order:-1; }
-@media (max-width: 760px) {
- .mmh-toppick .mmh-bubble { width:100%; height:auto; border-radius:14px; padding:10px; flex-direction:row; gap:12px; }
- .mmh-mystery .q { font-size:2.4rem; }
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -374,7 +337,7 @@ def compute():
 
 
 # ---------------------------------------------------------------- shared bits
-LINE_DOT = {"Red": "🔴", "Orange": "🟠", "Blue": "🔵", "Green": "🟢"}
+AVATARS = ["👩🏻", "🧢", "👧🏽", "🧑🏾", "👱🏼"]
 MOOD_ICON = {"Starving": "🍔", "Chill": "☕", "Dateish": "💕", "Adventurous": "🧗", "Productive": "💻"}
 ACT_ICON = {"Food": "🍜", "Cafe": "☕", "Dessert": "🍰", "Outdoor": "🌳", "Museum": "🏛️",
             "Shopping": "🛍️", "Nightlife": "🎤"}
@@ -399,16 +362,8 @@ def head_card(title, sub, icon=""):
                 f'<div class="sub">{sub}</div></div>', unsafe_allow_html=True)
 
 
-def avatar(i, small=False):
-    """Neutral friend icon: circle in the friend's T-line color with their initial."""
-    name = (ss.get(f"name_{i}") or f"Friend {i + 1}").strip() or "?"
-    color = LINE_HEX.get(ss.get(f"line_{i}"), "#111")
-    return f'<span class="mmh-av{" sm" if small else ""}" style="background:{color}">{esc(name[0].upper())}</span>'
-
-
-def avatar_txt(i):
-    """Plain-text version for widgets that can't render HTML."""
-    return LINE_DOT.get(ss.get(f"line_{i}"), "⚪")
+def avatar(i):
+    return AVATARS[i % len(AVATARS)]
 
 
 st.markdown('<div class="mmh-brand">BOSTONHACKS 2026</div>', unsafe_allow_html=True)
@@ -455,14 +410,14 @@ elif ss["page"] == "vibe":
     if ss.get("vibe_friend") is None or ss["vibe_friend"] >= n:
         ss["vibe_friend"] = 0
     st.segmented_control("Friend", list(range(n)), key="vibe_friend", label_visibility="collapsed",
-                         format_func=lambda k: f"{avatar_txt(k)} {ppl[k]['name']}")
+                         format_func=lambda k: f"{avatar(k)} {ppl[k]['name']}")
     i = ss["vibe_friend"] if ss["vibe_friend"] is not None else 0
 
     with st.container(border=True):
         st.markdown(f"#### {esc(ppl[i]['name'])}'s preferences")
         a, b = st.columns(2)
         with a:
-            st.slider("💵 Budget (per person, $)", 0, 60, key=f"budget_{i}")
+            st.slider("💵 Budget (per person, $)", 0, 70, key=f"budget_{i}")
             st.pills("Want to do", L.ACTIVITIES, selection_mode="multi", key=f"activities_{i}",
                      format_func=lambda x: f"{ACT_ICON.get(x, '')} {x}")
             st.pills("Cuisines", L.CUISINES, selection_mode="multi", key=f"cuisines_{i}")
@@ -507,6 +462,7 @@ else:
     idx_of = {p["name"]: k for k, p in enumerate(ppl)}
     w = ss["t_weight"]
     best = top.iloc[0]
+    best_open, best_close = L.today_hours(best)
     f = L.fairness(best)
 
     # ------------------------------------------------ RESULTS PAGE 1: MEET
@@ -516,16 +472,17 @@ else:
 
         st.markdown(f"""
 <div class="mmh-toppick"><div class="tag">⭐ TOP PICK</div>
-  <div class="mmh-bubble">Group Match<b>{best['avg_match']:.0%}</b></div>
+  <div class="mmh-illo">{TYPE_ICON.get(str(best['type']), '📍')}</div>
   <div style="flex:1">
     <div class="mmh-big">{esc(best['name'])}</div>
     <div style="margin:6px 0">{TYPE_ICON.get(str(best['type']), '')} {esc(best['type'])} &nbsp;·&nbsp;
       <span class="mmh-chip">~${best['avg_cost']:.0f} per person</span> &nbsp;·&nbsp; {esc(best['indoor_outdoor'])} · {esc(best['noise'])}
-      &nbsp;·&nbsp; 🕒 {esc(best['open'])}–{esc(best['close'])}</div>
+      &nbsp;·&nbsp; 🕒 {esc(f"{best_open}–{best_close}" if best_open and best_close else "Closed today")}</div>
     <div>Ⓣ <b>{esc(best['nearest_station'])}</b> {lines_pills(best['nearest_lines'])}</div>
     <div style="margin-top:8px"><b>🚇 T Convenience {best['transit']:.0%}</b>{bar(best['transit'], '#3575DE')}</div>
-    <div style="font-size:.85rem">Overall {best['total']:.0%} = {w}% T convenience + {100 - w}% group match · full rules on the next page</div>
+    <div style="font-size:.85rem">Overall {best['total']:.0%} = {w}% T convenience + {100 - w}% group match</div>
   </div>
+  <div class="mmh-bubble">Group Match<b>{best['avg_match']:.0%}</b></div>
 </div>""", unsafe_allow_html=True)
 
         left, right = st.columns([3, 2])
@@ -534,10 +491,10 @@ else:
             for p in ppl:
                 mins, direct, walk = best["trips"][p["name"]]
                 badge = '<span class="mmh-badge ok">Direct</span>' if direct else '<span class="mmh-badge tr">Transfer</span>'
-                rows += (f'<div class="mmh-row"><div>{avatar(idx_of[p["name"]], True)} <b>{esc(p["name"])}</b><br>'
+                rows += (f'<div class="mmh-row"><div>{avatar(idx_of[p["name"]])} <b>{esc(p["name"])}</b><br>'
                          f'<span style="font-size:.85rem">{esc(p["station"])} {line_pill(p["line"])}</span></div>'
-                         f'<div style="text-align:right">🚇 <b>~{mins} min</b> {badge}<br>'
-                         f'<span style="font-size:.85rem">+ {walk} min walk</span></div></div>')
+                         f'<div>🚇 <b>~{mins} min</b><br><span style="font-size:.85rem">+ {walk} min walk</span></div>'
+                         f'<div>{badge}</div></div>')
             st.markdown(f'<div class="mmh-card"><span class="mmh-hl">🚇 How everyone gets there</span>'
                         f'{rows}<div style="font-size:.8rem;margin-top:6px">Estimated times — not live MBTA data.</div></div>',
                         unsafe_allow_html=True)
@@ -562,7 +519,6 @@ else:
                          color=[210, 31, 54] if r["rank"] == 1 else [247, 224, 0], r=170 if r["rank"] == 1 else 110)
                     for _, r in top.iterrows()]
             mdf = pd.DataFrame(pts)
-            mdf["short"] = mdf["label"].str.split(" ").str[0]   # "#1", "#2"… keeps labels from piling up
             st.pydeck_chart(pdk.Deck(
                 map_style=None,
                 initial_view_state=pdk.ViewState(latitude=mdf.lat.mean(), longitude=mdf.lon.mean(), zoom=12),
@@ -570,14 +526,12 @@ else:
                     pdk.Layer("ScatterplotLayer", mdf, get_position="[lon, lat]", get_fill_color="color",
                               get_radius="r", stroked=True, get_line_color=[17, 17, 17], line_width_min_pixels=2,
                               pickable=True),
-                    pdk.Layer("TextLayer", mdf[mdf["label"].str.startswith("#")], get_position="[lon, lat]",
-                              get_text="short", get_size=14, get_color=[17, 17, 17], get_pixel_offset=[0, -20]),
+                    pdk.Layer("TextLayer", mdf, get_position="[lon, lat]", get_text="label", get_size=12,
+                              get_color=[17, 17, 17], get_pixel_offset=[0, -18]),
                 ],
-                views=[pdk.View(type="MapView", controller={"scrollZoom": False, "dragPan": True,
-                                                            "doubleClickZoom": True, "touchZoom": True})],
                 tooltip={"text": "{label}"},
             ), height=300)
-            st.caption("Colored dots = friends' starting stops (by line) · 🔴 #1 place · 🟡 alternatives · tap a dot for its name. Pins only, not real routes.")
+            st.caption("Colored dots = starting stations by MBTA line · red marker = #1 place · yellow markers = alternatives. Pin map only, not real routes.")
         with ocol:
             st.markdown('<span class="mmh-hl">🌟 Other great options</span>',
                         unsafe_allow_html=True)
@@ -594,17 +548,14 @@ else:
 
         st.markdown('<div class="mmh-split-title"><span class="mmh-hl">✨ Next stop: the group drama</span>'
                     '<span class="mmh-sticker">WHO IS THE PICKIEST? 👀</span></div>', unsafe_allow_html=True)
-        if res.get("winner"):
-            faces = "".join(avatar(k) for k in range(len(ppl)))
-            st.markdown(f'''<div class="mmh-mystery"><div style="font-size:2.2rem">🥁 👑 🥁</div>
-<div class="q">???</div><p><b>One of you made this way harder than it needed to be.</b></p>
-<p>Ready to find out who?</p><div class="ppl">{faces}</div></div>''', unsafe_allow_html=True)
-            reveal = "🎁 Reveal the Hardest to Please →"
-        else:
-            reveal = "🤝 See everyone's match →"
+        winner = res.get("winner")
+        if winner:
+            st.markdown(f'<div class="mmh-card mmh-hot" style="text-align:center"><div class="mmh-big">👑 Hardest to Please: '
+                        f'{esc(winner)} 😅</div><p style="margin:6px 0 0 0">See why — and how {esc(winner)} can meet the group halfway.</p></div>',
+                        unsafe_allow_html=True)
         n1, n2 = st.columns([1, 2])
         n1.button("← Edit the vibe", on_click=go, args=("vibe",), use_container_width=True)
-        n2.button(reveal, type="primary", on_click=go, args=("results2",), use_container_width=True)
+        n2.button("😈 See Hardest to Please →", type="primary", on_click=go, args=("results2",), use_container_width=True)
 
     # ------------------------------------------------ RESULTS PAGE 2: HARDEST TO PLEASE
     else:
@@ -626,7 +577,7 @@ else:
     <div style="margin-top:13px;font-weight:600">On our top picks: {avg[winner]:.0%} average match
       &nbsp;·&nbsp; Group average: {avg.mean():.0%}</div>
   </div>
-  <div style="font-size:4.5rem;line-height:1;text-align:center">👑</div>
+  <div style="font-size:5rem;line-height:1;text-align:center">{avatar(idx_of[winner])}<br>👑</div>
 </div>""", unsafe_allow_html=True)
 
             c = res["compromise"]
@@ -645,26 +596,41 @@ else:
                     f'(~{f["longest_min"]} min). Trips differ by only <b>{f["gap"]} min</b> — that\'s meeting halfway.</div>',
                     unsafe_allow_html=True)
 
-        if winner:
-            person = res["person"]
-            misses = {bd["field"] for _, r in top.iterrows() for bd in L.match_breakdown(person, r) if not bd["matched"]}
-            chips = [
-                ("mood", f"{MOOD_ICON.get(person['mood'], '')} Feeling {person['mood']}"),
-                ("activities", f"🎯 Wants {', '.join(person['activities']) or 'anything'}"),
-                ("cuisines", f"🍴 Likes {', '.join(person['cuisines']) or 'any cuisine'}"),
-                ("indoor_outdoor", f"{IO_ICON.get(person['indoor_outdoor'], '')} Prefers {person['indoor_outdoor']}"),
-                ("noise", f"{NOISE_ICON.get(person['noise'], '')} {person['noise']} vibe"),
-            ]
-            chip_html = "".join(f'<span class="mmh-pchip {"miss" if k in misses else "hit"}">{esc(t)}</span>'
-                                for k, t in chips)
-            chip_html += f'<span class="mmh-pchip">💵 Budget ≤ ${person["budget"]}</span>'
-            for d in person["dietary"]:
-                chip_html += f'<span class="mmh-pchip">🥗 {esc(d)}</span>'
-            items = "".join(f"<li>{md(r)}</li>" for r in res["reasons"]) or "<li>No mismatches found.</li>"
-            st.markdown(f'<div class="mmh-card"><span class="mmh-hl" style="font-size:1.2rem">'
-                        f'🔍 Why {esc(winner)}?</span><div style="margin:10px 0">{chip_html}</div>'
-                        f'<div style="font-size:.8rem">🟥 clashed with at least one top pick · 🟩 matched every top pick</div>'
-                        f'<ul style="margin-top:8px">{items}</ul></div>', unsafe_allow_html=True)
+        a, b = st.columns(2)
+        with a:
+            if winner:
+                person = res["person"]
+                misses = {bd["field"] for _, r in top.iterrows() for bd in L.match_breakdown(person, r) if not bd["matched"]}
+                chips = [
+                    ("mood", f"{MOOD_ICON.get(person['mood'], '')} Feeling {person['mood']}"),
+                    ("activities", f"🎯 Wants {', '.join(person['activities']) or 'anything'}"),
+                    ("cuisines", f"🍴 Likes {', '.join(person['cuisines']) or 'any cuisine'}"),
+                    ("indoor_outdoor", f"{IO_ICON.get(person['indoor_outdoor'], '')} Prefers {person['indoor_outdoor']}"),
+                    ("noise", f"{NOISE_ICON.get(person['noise'], '')} {person['noise']} vibe"),
+                ]
+                chip_html = "".join(f'<span class="mmh-pchip {"miss" if k in misses else "hit"}">{esc(t)}</span>'
+                                    for k, t in chips)
+                chip_html += f'<span class="mmh-pchip">💵 Budget ≤ ${person["budget"]}</span>'
+                for d in person["dietary"]:
+                    chip_html += f'<span class="mmh-pchip">🥗 {esc(d)}</span>'
+                items = "".join(f"<li>{md(r)}</li>" for r in res["reasons"]) or "<li>No mismatches found.</li>"
+                st.markdown(f'<div class="mmh-card"><span class="mmh-hl" style="font-size:1.2rem">'
+                            f'🔍 Why {esc(winner)}?</span><div style="margin:10px 0">{chip_html}</div>'
+                            f'<div style="font-size:.8rem">🟥 clashed with at least one top pick · 🟩 matched every top pick</div>'
+                            f'<ul style="margin-top:8px">{items}</ul></div>', unsafe_allow_html=True)
+        with b:
+            st.markdown(f"""
+<div class="mmh-card"><span class="mmh-hl" style="font-size:1.2rem">📊 How the score works</span>
+  <div class="mmh-formula">Score = {100 - w}% Group match + {w}% T convenience</div>
+  <ul style="font-size:.92rem">
+    <li><b>Hard filters first:</b> over the lowest budget, or missing a vegetarian/halal option someone needs → removed.</li>
+    <li><b>Trip minutes</b> = {L.WAIT_MIN} min wait + ride between stations + walk from station (+{L.TRANSFER_MIN} min if you transfer). Estimates only.</li>
+    <li><b>T convenience</b> = 70% the farthest friend's trip is short + 30% everyone's trip is a similar length.</li>
+    <li><b>Group match</b> = mood, activity, cuisine, indoor/outdoor, noise — each worth 20% per friend.</li>
+    <li><b>Hardest to Please</b> = lowest average match on the top picks.</li>
+  </ul>
+</div>""", unsafe_allow_html=True)
+
         st.markdown('<div class="mmh-split-title"><span class="mmh-hl">🎯 Who actually liked each place?</span>'
                     '<span class="mmh-sticker">RECEIPTS INCLUDED 🧾</span></div>', unsafe_allow_html=True)
         st.caption("These percentages are computed from five preference checks per friend, not made-up demo values.")
@@ -675,7 +641,7 @@ else:
             return f'<td style="background:{bg}"><b>{v}%</b></td>'
 
         icons = dict(zip(top["display_label"], top["type"]))
-        head_row = "".join(f"<th>{avatar(idx_of.get(c, 0), True)} {esc(c)}</th>" for c in mt.columns)
+        head_row = "".join(f"<th>{avatar(idx_of.get(c, 0))} {esc(c)}</th>" for c in mt.columns)
         body = "".join(f"<tr><td>{TYPE_ICON.get(str(icons.get(idx)), '📍')} {esc(idx)}</td>"
                        f"{''.join(cell(int(v)) for v in row)}</tr>" for idx, row in mt.iterrows())
         st.markdown(f'<table class="mmh-t"><tr><th>📊 Place</th>{head_row}</tr>{body}</table>', unsafe_allow_html=True)
@@ -692,20 +658,8 @@ else:
                     lines = "".join(
                         f'<div class="mmh-row" style="font-size:.85rem"><span>{"✅" if x["matched"] else "❌"} {esc(x["label"])}</span>'
                         f'<span>wants <i>{esc(x["wanted"])}</i> · has <i>{esc(x["place_value"])}</i></span></div>' for x in bd)
-                    st.markdown(f'<div class="mmh-card"><b>{avatar(idx_of[p["name"]], True)} {esc(p["name"])}</b> — '
+                    st.markdown(f'<div class="mmh-card"><b>{avatar(idx_of[p["name"]])} {esc(p["name"])}</b> — '
                                 f'{score}/5 ({score * 20}%){lines}</div>', unsafe_allow_html=True)
-
-        st.markdown(f"""
-<div class="mmh-card"><span class="mmh-hl" style="font-size:1.2rem">📊 How the score works (same rules for every group)</span>
-  <div class="mmh-formula">Score = {100 - w}% Group match + {w}% T convenience</div>
-  <ul style="font-size:.92rem">
-<li><b>Hard filters first:</b> over the lowest budget, or missing a vegetarian/halal option someone needs → removed.</li>
-<li><b>Trip minutes</b> = {L.WAIT_MIN} min wait + ride between stations + walk from station (+{L.TRANSFER_MIN} min if you transfer). Estimates only.</li>
-<li><b>T convenience</b> = 70% the farthest friend's trip is short + 30% everyone's trip is a similar length.</li>
-<li><b>Group match</b> = mood, activity, cuisine, indoor/outdoor, noise — each worth 20% per friend.</li>
-<li><b>Hardest to Please</b> = lowest average match on the top picks.</li>
-  </ul>
-</div>""", unsafe_allow_html=True)
 
         n1, n2 = st.columns(2)
         n1.button("← Back to meeting point", on_click=go, args=("results1",), use_container_width=True)
